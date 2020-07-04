@@ -88,6 +88,6 @@ class Index:
 
 #Test Code
 """
-index1 = Index('^NDX',1000,'2018-10-01')
-print(index1.complete_table.head())
+index1 = Index('^NDX',1000,'2020-03-25')
+print(index1.complete_table)
 """

@@ -1,0 +1,4 @@
+yahoofinancials
+pandas
+matplotlib
+datetime
