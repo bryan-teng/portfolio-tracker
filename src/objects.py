@@ -3,12 +3,57 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
 
+class Equity:
+    def __init__(self, ticker, date_of_purchase, qty):
+        """
+        An Equity object.
+        date_of_purchase = Date when Equity is purchased.
+        qty = Quantity of equity purchased.
+        historical_prices = Collects the historical prices of the equity from Yahoo Finance.
+        """
+        self.ticker = ticker
+        self.date_of_purchase = date_of_purchase
+        self.qty = qty
+
+        self.historical_prices = self.get_historical_prices(date_of_purchase,datetime.now().isoformat()[:10],'daily')
+        self.historical_paper_value = self.get_historical_paper_value()
+
+    def get_historical_prices(self,start,end,frequency):
+        """
+        Collects historical prices of the equity from Yahoo Finance.
+        Collects all data from the date of purchase until today
+        """
+        equity_financials = YahooFinancials(self.ticker)
+        equity_data = equity_financials.get_historical_price_data(start, end, frequency)[self.ticker]['prices']
+
+        df = pd.DataFrame(columns=['date','high','low','open','close'])
+    
+        for data in equity_data:
+            df = df.append({
+                'date': data['formatted_date'],
+                'high': data['high'],
+                'low': data['low'],
+                'open': data['open'],
+                'close': data['close'],
+                }, ignore_index = True
+                )
+        df = df.set_index('date')
+        return df
+
+    def get_historical_paper_value(self):
+        """
+        Calculates paper value based on closing prices. Returns a DataFrame with an update column 'paper_value'
+        """
+        df = self.historical_prices
+        df['paper_value'] = df['close'] * self.qty
+        return df
+
 class Index:
     def __init__(self, ticker, cash_value, date_of_purchase, strategy='lump_sum'):
         """
-        An index object.
+        An Index object.
         cash_value = Cash value that is invested into the fund
-        date_of_purchase = Date where cash is injected into the fund
+        date_of_purchase = Date when cash is injected into the fund
         strategy = Strategy of investing into the index fund. Currently only supports lump_sum strategy, looking to implement DCA soon.
         historical_prices = Collects the historical prices of the index from Yahoo Finance.
         qty = Quantity of index that is owned
@@ -53,12 +98,12 @@ class Index:
         Selects the appropriate method to calculate the paper value based on the strategy specified
         """
         if self.strategy == 'lump_sum':
-            return self.lump_sum_paper_value()
+            return self.get_historical_paper_value_lumpsum()
 
 
-    def lump_sum_paper_value(self):
+    def get_historical_paper_value_lumpsum(self):
         """
-        Calculates paper value based on the lump sum strategy. Returns a DataFrame with an update column 'paper_value'
+        Calculates paper value based on closing prices using the lump sum strategy. Returns a DataFrame with an update column 'paper_value'
         """
         df = self.historical_prices
         df['paper_value'] = df['close'] * self.qty
@@ -69,9 +114,9 @@ class Index:
         Selects the appropriate method to calculate the quantity of index owned based on the strategy specified
         """
         if self.strategy == 'lump_sum':
-            return self.lump_sum_qty()
+            return self.get_qty_lumpsum()
     
-    def lump_sum_qty(self):
+    def get_qty_lumpsum(self):
         """
         Calculates quantity of index owned based on the lump sum strategy. Returns a float value.
         """
@@ -89,5 +134,8 @@ class Index:
 #Test Code
 """
 index1 = Index('^NDX',1000,'2020-03-25')
-print(index1.complete_table)
+print(index1.complete_table.head())
+
+equity1 = Equity('EBAY','2020-03-25',1000)
+print(equity1.historical_paper_value.head())
 """
