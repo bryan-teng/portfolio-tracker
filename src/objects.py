@@ -131,11 +131,28 @@ class Index:
         return df
 
 class Fund:
-    def __init__(self, cash, index_ticker, date_of_creation, strategy='lump_sum', equities=[]):
+    def __init__(self, cash, index_ticker, date_of_creation, strategy='lump_sum'):
+        """
+        A Fund object.
+        cash = Total amount of cash injected into the fund.
+        index_ticker = The ticker of the index used as the fund's benchmark.
+        date_of_creation = Date when the fund is created.
+        equities = Equities owned by the fund. Add on equities using the .buy_equity method.
+        strategy = The strategy used for the equivalent index comparison.
+
+        index = Contains an Index object that is created based on the index_ticker attribute.
+        cash_df = A DataFrame that contains Index performance and the amount of cash owned by the fund.
+        cash_deductions = 
+        Contains lists [a,b] which are individually appended after each .buy_equity() method.
+        Accounts for the decreaese in cash, where a = amount of cash decrease, b = date of decreasse.
+
+        all_assets = A DataFrame that adds on the total asset value owned by the fund in addition to the cash_df.
+        all_assets_normalised = A DataFrame that adds on the normalised total asset value.
+        """
         self.cash = cash
         self.index_ticker = index_ticker
         self.date_of_creation = date_of_creation
-        self.equities = equities
+        self.equities = []
         self.strategy = strategy
 
         self.index = self.initialise_index()
@@ -146,9 +163,17 @@ class Fund:
         self.all_assets_normalised = self.normalise_all_assets()
 
     def initialise_index(self):
+        """
+        Creates an Index object based on the ticker specified in index_ticker
+        """
         return Index(self.index_ticker, self.cash, self.date_of_creation, self.strategy)
 
     def compile_all_assets(self):
+        """
+        Creates a DataFrame that contains the Index's paper_value, its normalised_value, and the cash owned by the fund.
+        Then calls the check_cash_deduction methods to adjust the cash values accordingly.
+        Then adds in the paper value of the equities owned by the fund.
+        """
         df = pd.DataFrame()
         df[self.index.ticker+' paper_value'] = self.index.complete_table['paper_value']
         df[self.index.ticker+' normalised_value'] = self.index.complete_table['normalised_value']
@@ -162,6 +187,10 @@ class Fund:
         return df
     
     def get_cash_df(self):
+        """
+        Generates a DataFrame where each element is equivalent to the fund's cash.
+        The index.complete_table method is called just to generate rows which are equal to the number of dates.
+        """
         df = pd.DataFrame()
         df[self.index.ticker] = self.index.complete_table['paper_value']
         df['cash'] = self.cash
@@ -169,11 +198,19 @@ class Fund:
         return df
 
     def check_cash_deductions(self, df):
+        """
+        Adjusts cash values in the appropriate rows (at specific dates) based on the deductions present.
+        """
         for deduction in self.cash_deductions:
             df.loc[deduction[1]:,'cash'] -= deduction[0]
         return df
 
     def buy_equity(self, ticker, date_of_purchase, qty, price):
+        """
+        This method is called when cash is used to buy an equity.
+        Updates the attributes equities and cash_deductions accordingly.
+        Then updates the all_assets and all_assets_normalised.
+        """
         self.equities.append(Equity(ticker, date_of_purchase, qty))
         self.cash_deductions.append([price*qty, date_of_purchase])
 
@@ -181,12 +218,18 @@ class Fund:
         self.all_assets_normalised = self.normalise_all_assets()
 
     def normalise_all_assets(self):
+        """
+        Normalises all assets owned, with the initial asset value (=initial cash owned by the fund) set at 100.
+        """
         df = self.all_assets
         cash_and_equities_df = df.iloc[:,2:]
         df['normalised_asset_value'] = ((cash_and_equities_df.sum(axis=1))/self.cash)*100
         return df
     
     def plot_fund_performance(self):
+        """
+        Plots the fund's performance against the index.
+        """
         df = pd.DataFrame()
         df2 = self.all_assets_normalised
 
