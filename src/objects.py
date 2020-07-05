@@ -130,12 +130,84 @@ class Index:
         df['normalised_value'] = (df['paper_value']/df['paper_value'].iloc[0])*100
         return df
 
+class Fund:
+    def __init__(self, cash, index_ticker, date_of_creation, strategy='lump_sum', equities=[]):
+        self.cash = cash
+        self.index_ticker = index_ticker
+        self.date_of_creation = date_of_creation
+        self.equities = equities
+        self.strategy = strategy
+
+        self.index = self.initialise_index()
+        self.cash_df = self.get_cash_df()
+        self.cash_deductions = []
+
+        self.all_assets = self.compile_all_assets()
+        self.all_assets_normalised = self.normalise_all_assets()
+
+    def initialise_index(self):
+        return Index(self.index_ticker, self.cash, self.date_of_creation, self.strategy)
+
+    def compile_all_assets(self):
+        df = pd.DataFrame()
+        df[self.index.ticker+' paper_value'] = self.index.complete_table['paper_value']
+        df[self.index.ticker+' normalised_value'] = self.index.complete_table['normalised_value']
+        df['cash'] = self.cash_df
+
+        df = self.check_cash_deductions(df)
+
+        for equity in self.equities:
+            df[equity.ticker] = equity.historical_paper_value['paper_value']
+            df[equity.ticker].fillna(0, inplace=True)
+        return df
+    
+    def get_cash_df(self):
+        df = pd.DataFrame()
+        df[self.index.ticker] = self.index.complete_table['paper_value']
+        df['cash'] = self.cash
+        df.drop(columns=[self.index.ticker],axis=1,inplace=True)
+        return df
+
+    def check_cash_deductions(self, df):
+        for deduction in self.cash_deductions:
+            df.loc[deduction[1]:,'cash'] -= deduction[0]
+        return df
+
+    def buy_equity(self, ticker, date_of_purchase, qty, price):
+        self.equities.append(Equity(ticker, date_of_purchase, qty))
+        self.cash_deductions.append([price*qty, date_of_purchase])
+
+        self.all_assets = self.compile_all_assets()
+        self.all_assets_normalised = self.normalise_all_assets()
+
+    def normalise_all_assets(self):
+        df = self.all_assets
+        cash_and_equities_df = df.iloc[:,2:]
+        df['normalised_asset_value'] = ((cash_and_equities_df.sum(axis=1))/self.cash)*100
+        return df
+    
+    def plot_fund_performance(self):
+        df = pd.DataFrame()
+        df2 = self.all_assets_normalised
+
+        df[self.index_ticker] = df2[self.index_ticker + ' normalised_value']
+        df['Fund'] = df2['normalised_asset_value']
+
+        df.plot(figsize=(12,4))
+        plt.show()
 
 #Test Code
-"""
-index1 = Index('^NDX',1000,'2020-03-25')
-print(index1.complete_table.head())
 
-equity1 = Equity('EBAY','2020-03-25',1000)
-print(equity1.historical_paper_value.head())
-"""
+equity1 = Equity('EBAY','2020-06-24',1000)
+equity2 = Equity('ADSK','2020-06-23',500)
+
+fund1= Fund(200000,'^NDX','2020-06-19')
+
+#print(fund1.all_assets.head())
+
+fund1.buy_equity('EBAY','2020-06-24',1000,equity1.historical_prices.loc['2020-06-24','close'])
+fund1.buy_equity('ADSK','2020-06-23',500,equity2.historical_prices.loc['2020-06-23','close'])
+
+#print(fund1.all_assets.head())
+print(fund1.all_assets_normalised)
+fund1.plot_fund_performance()
