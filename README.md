@@ -48,8 +48,11 @@ Note that the variable `output_path` in `.export_to_csv` is set to 'data/histori
 ## Sample Code:
 
 ```
-#Set up your fund
+#Imports
+import pyportfoliotracker
+from pyportfoliotracker.objects import Fund
 
+#Set up your fund
 date = '2020-05-18'
 fund = Fund(2375706,'^FTSE',date,strategy='dca10')
 
