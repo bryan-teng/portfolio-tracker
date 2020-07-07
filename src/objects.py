@@ -112,6 +112,9 @@ class Index:
         return df
 
     def get_historical_paper_value_dca10(self):
+        """
+        Calculates paper value based on closing prices using the DCA 10 strategy. Returns a DataFrame with an update column 'paper_value'
+        """
         df = self.historical_prices
         df['qty_owned'] = self.qty['qty_owned']
         df['cash_not_yet_invested'] = self.qty['cash_not_yet_invested']
@@ -136,6 +139,9 @@ class Index:
         return self.cash_value/(self.historical_prices.loc[self.date_of_purchase]['close'])
 
     def get_qty_dca10(self):
+        """
+        Calculates quantity of index owned based on the DCA 10 strategy. Returns a DataFrame.
+        """
         df = pd.DataFrame()
         df['close'] = self.historical_prices['close']
 
