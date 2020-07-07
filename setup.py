@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pyportfoliotracker", # Replace with your own username
-    version="0.0.1",
+    version="0.0.2",
     author="Bryan Teng",
     author_email="teng.weiyan.bryan@gmail.com",
     description="Track the performance of your portfolio of equities vs an index",

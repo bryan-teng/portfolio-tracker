@@ -6,8 +6,8 @@ Track an equity portfolio's performance against a major index.
 The following packages are required: `yahoofinancials`, `pandas`, `matplotlib`, `datetime`
 
 Enter the following imports at the top of the file:
-`import pyportfoliotracker`
-`from pyportfoliotracker.objects import Fund`
+- `import pyportfoliotracker`
+- `from pyportfoliotracker.objects import Fund`
 
 ## 1. Setting up your fund
 
