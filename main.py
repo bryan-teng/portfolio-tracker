@@ -1,4 +1,4 @@
-from src.objects import Fund
+from portfoliotracker.objects import Fund
 
 #Test Code
 
@@ -19,7 +19,7 @@ def main():
 
     #Call methods based on output desired
     fund.plot_fund_performance()
-    fund.export_to_csv()
+    #fund.export_to_csv()
 
 if __name__ == "__main__":
     main()

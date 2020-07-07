@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#datafiles
+/data/
+*.egg-info
+/build/
+/dist/
