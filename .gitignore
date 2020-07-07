@@ -133,4 +133,3 @@ dmypy.json
 *.egg-info
 /build/
 /dist/
-setup.py
