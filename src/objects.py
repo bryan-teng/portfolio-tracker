@@ -100,6 +100,8 @@ class Index:
         if self.strategy == 'lump_sum':
             return self.get_historical_paper_value_lumpsum()
 
+        if self.strategy == 'dca10':
+            return self.get_historical_paper_value_dca10()
 
     def get_historical_paper_value_lumpsum(self):
         """
@@ -109,18 +111,54 @@ class Index:
         df['paper_value'] = df['close'] * self.qty
         return df
 
+    def get_historical_paper_value_dca10(self):
+        df = self.historical_prices
+        df['qty_owned'] = self.qty['qty_owned']
+        df['cash_not_yet_invested'] = self.qty['cash_not_yet_invested']
+
+        df['paper_value'] = df['cash_not_yet_invested'] + (df['qty_owned']*df['close'])
+        df.drop(columns=['qty_owned','cash_not_yet_invested'],axis=1,inplace=True)
+        return df
+
     def qty_selector(self):
         """
         Selects the appropriate method to calculate the quantity of index owned based on the strategy specified
         """
         if self.strategy == 'lump_sum':
             return self.get_qty_lumpsum()
+        if self.strategy == 'dca10':
+            return self.get_qty_dca10()
     
     def get_qty_lumpsum(self):
         """
         Calculates quantity of index owned based on the lump sum strategy. Returns a float value.
         """
         return self.cash_value/(self.historical_prices.loc[self.date_of_purchase]['close'])
+
+    def get_qty_dca10(self):
+        df = pd.DataFrame()
+        df['close'] = self.historical_prices['close']
+
+        num_of_rows = len(df.index)
+        total_owned = 0
+        qty_owned = []
+        cash_not_yet_invested = []
+
+        for i in range(10):
+            qty_bought_on_day = (self.cash_value/10)/df['close'].iloc[i]
+            total_owned += qty_bought_on_day
+            qty_owned.append(total_owned)
+
+            cash_not_yet_invested.append(((9-i)*0.1)*self.cash_value)
+        
+        for j in range(num_of_rows-10):
+            qty_owned.append(total_owned)
+            cash_not_yet_invested.append(0)
+
+        df['qty_owned'] = qty_owned
+        df['cash_not_yet_invested'] = cash_not_yet_invested
+
+        return df
 
     def create_complete_table(self):
         """
@@ -251,7 +289,7 @@ class Fund:
 
 date1 = '2020-05-18'
 
-fund1 = Fund(2375706,'^FTSE',date1)
+fund1 = Fund(2375706,'^FTSE',date1,strategy='dca10')
 
 fund1.buy_equity('GSK.L',date1,397,1670.20)
 fund1.buy_equity('SGE.L',date1,802,653)
@@ -262,7 +300,6 @@ fund1.buy_equity('RHIM.L',date1,69,2306.00)
 fund1.buy_equity('ICP.L',date1,64,1109.00)
 fund1.buy_equity('ASC.L',date1,21,2768.8)
 
-#print(fund1.all_assets.head())
 print(fund1.all_assets_normalised)
 fund1.plot_fund_performance()
-fund1.export_to_csv()
+#fund1.export_to_csv()
