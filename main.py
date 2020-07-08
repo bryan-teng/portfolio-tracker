@@ -17,10 +17,8 @@ def main():
     fund.buy_equity('ICP.L',date,64,1109.00)
     fund.buy_equity('ASC.L',date,21,2768.8)
 
-    fund.sell_equity('GSK.L','2020-05-21',300,1670.20)
-
     #Call methods based on output desired
-    #fund.plot_fund_performance()
+    fund.plot_fund_performance()
     #fund.export_to_csv()
     #print(fund.all_assets_normalised.head())
 

@@ -57,9 +57,19 @@ There are 2 types of output that can be obtained:
 
 **1. Graphical comparison of fund vs index performance** : obtained by calling `fund.plot_fund_performance()`
 
+<img src="/src/graphical_output.png" alt="Graphical Output of Fund Performance"/>
+
 **2. CSV file containing the value of the fund vs index over time** : obtained by calling `fund.export_to_csv(output_path)`
 
+<img src="/src/csv_output.png" alt="CSV Output of Fund Performance"/>
+
 Note that the variable `output_path` in `.export_to_csv` is set to 'data/historical-paper-values.csv' by default.
+
+**2a. View the DataFrame directly**
+
+The attribute `.all_assets_normalised` represents a DataFrame of the paper value of your fund vs the index.
+Use `print(fund.all_assets_normalised)` to view the DataFrame directly rather than exporting it as a CSV.
+
 
 ## Sample Code:
 
