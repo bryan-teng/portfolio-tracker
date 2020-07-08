@@ -10,7 +10,7 @@ The following packages are required: `yahoofinancials`, `pandas`, `matplotlib`, 
 Enter the following imports at the top of the file:
 ```
 import pyportfoliotracker
-from pyportfoliotracker.objects import Fund
+from pyportfoliotracker import Fund
 ```
 
 ## 1. Setting up your fund
@@ -23,7 +23,7 @@ where
 - cash = cash value of the fund
 - index_ticker = the ticker (based on Yahoo Finance) of the benchmark index
 - date_of_creation = date of creation of the fund
-- strategy (optional) = strategy used for the index benchmark. The default strategy is lump_sum.
+- strategy (optional) = strategy used for the index benchmark. The default strategy is lump_sum. The other option is dca10, which represents Dollar Cost Averaging using 10% of cash value per day.
 
 ## 2. Purchasing/Selling the relevant equities
 
@@ -66,7 +66,7 @@ Note that the variable `output_path` in `.export_to_csv` is set to 'data/histori
 ```
 #Imports
 import pyportfoliotracker
-from pyportfoliotracker.objects import Fund
+from pyportfoliotracker import Fund
 
 #Set up your fund
 date = '2020-05-18'

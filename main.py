@@ -1,4 +1,4 @@
-from pyportfoliotracker.objects import Fund
+from pyportfoliotracker import Fund
 
 #Test Code
 
