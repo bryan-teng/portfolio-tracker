@@ -16,6 +16,7 @@ class Equity:
         self.qty = qty
 
         self.historical_prices = self.get_historical_prices(date_of_purchase,datetime.now().isoformat()[:10],'daily')
+        self.historical_prices_with_qty = self.get_historical_prices_with_qty()
         self.historical_paper_value = self.get_historical_paper_value()
 
     def get_historical_prices(self,start,end,frequency):
@@ -39,14 +40,32 @@ class Equity:
                 )
         df = df.set_index('date')
         return df
-
-    def get_historical_paper_value(self):
-        """
-        Calculates paper value based on closing prices. Returns a DataFrame with an update column 'paper_value'
-        """
-        df = self.historical_prices
-        df['paper_value'] = df['close'] * self.qty
+    
+    def get_historical_prices_with_qty(self):
+        df = self.historical_prices.copy()
+        df['qty'] = self.qty
         return df
+
+    def get_historical_paper_value(self, new=True):
+        """
+        Calculates paper value based on closing prices. Returns a DataFrame with an update column 'paper_value'.
+        new=True represents that the equity is purchased for the first time.
+        new=False represents a buy/sell transaction that increases/decreases the quantity of the equity.
+        """
+        if new == True:
+            df = self.historical_prices_with_qty.copy()
+            df['paper_value'] = df['close'] * df['qty']
+            return df
+        elif new == False:
+            df = self.historical_paper_value.iloc[:,:5].copy()
+            df['paper_value'] = df['close'] * df['qty']
+            return df
+
+    def update_historical_paper_value(self):
+        """
+        Updates historical paper value of an equity. This is done when an existing equity is bought or sold.
+        """
+        self.historical_paper_value = self.get_historical_paper_value(new=False)
 
 class Index:
     def __init__(self, ticker, cash_value, date_of_purchase, strategy='lump_sum'):
@@ -107,7 +126,7 @@ class Index:
         """
         Calculates paper value based on closing prices using the lump sum strategy. Returns a DataFrame with an update column 'paper_value'
         """
-        df = self.historical_prices
+        df = self.historical_prices.copy()
         df['paper_value'] = df['close'] * self.qty
         return df
 
@@ -115,7 +134,7 @@ class Index:
         """
         Calculates paper value based on closing prices using the DCA 10 strategy. Returns a DataFrame with an update column 'paper_value'
         """
-        df = self.historical_prices
+        df = self.historical_prices.copy()
         df['qty_owned'] = self.qty['qty_owned']
         df['cash_not_yet_invested'] = self.qty['cash_not_yet_invested']
 
@@ -170,7 +189,7 @@ class Index:
         """
         Normalises the paper_value column into a normalised_value column, with the initial paper_value set = 100
         """
-        df = self.historical_paper_value
+        df = self.historical_paper_value.copy()
         df['normalised_value'] = (df['paper_value']/df['paper_value'].iloc[0])*100
         return df
 
@@ -227,7 +246,9 @@ class Fund:
 
         for equity in self.equities:
             df[equity.ticker] = equity.historical_paper_value['paper_value']
+            df[equity.ticker+' qty']= equity.historical_paper_value['qty']
             df[equity.ticker].fillna(0, inplace=True)
+            df[equity.ticker+' qty'].fillna(0, inplace=True)
         return df
     
     def get_cash_df(self):
@@ -249,13 +270,42 @@ class Fund:
             df.loc[deduction[1]:,'cash'] -= deduction[0]
         return df
 
+    def sell_equity(self, ticker, date_of_sale, qty, price):
+        """
+        This method is called when an equity is sold for cash.
+        Updates the attributes equities and cash_deductions accordingly.
+        Then updates the all_assets and all_assets_normalised.
+        """
+        for equity in self.equities:
+            if equity.ticker == ticker:
+                equity.historical_paper_value.loc[date_of_sale:,'qty'] -= qty
+                equity.update_historical_paper_value()
+
+        self.cash_deductions.append([-(price*qty), date_of_sale])
+
+        self.all_assets = self.compile_all_assets()
+        self.all_assets_normalised = self.normalise_all_assets()      
+
     def buy_equity(self, ticker, date_of_purchase, qty, price):
         """
         This method is called when cash is used to buy an equity.
         Updates the attributes equities and cash_deductions accordingly.
         Then updates the all_assets and all_assets_normalised.
         """
-        self.equities.append(Equity(ticker, date_of_purchase, qty))
+        if len(self.equities) == 0:
+            self.equities.append(Equity(ticker, date_of_purchase, qty))
+
+        elif len(self.equities) != 0:
+            counter = 0
+            for equity in self.equities:
+                if equity.ticker == ticker:
+                    equity.historical_paper_value.loc[date_of_purchase:,'qty'] += qty
+                    equity.update_historical_paper_value()
+                else:
+                    counter += 1
+            if counter == len(self.equities):
+                self.equities.append(Equity(ticker, date_of_purchase, qty))
+
         self.cash_deductions.append([price*qty, date_of_purchase])
 
         self.all_assets = self.compile_all_assets()
@@ -265,8 +315,13 @@ class Fund:
         """
         Normalises all assets owned, with the initial asset value (=initial cash owned by the fund) set at 100.
         """
-        df = self.all_assets
-        cash_and_equities_df = df.iloc[:,2:]
+        df = self.all_assets.copy()
+        
+        tickers_equity = ['cash']
+        for equity in self.equities:
+            tickers_equity.append(equity.ticker)
+
+        cash_and_equities_df = df.loc[:,tickers_equity].copy()
         df['normalised_asset_value'] = ((cash_and_equities_df.sum(axis=1))/self.cash)*100
         return df
     
