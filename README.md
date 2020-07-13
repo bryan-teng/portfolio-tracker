@@ -76,7 +76,7 @@ Note that the variable `output_path` in `.export_graph` is set to 'data/fund-gra
 
 **3a. DataFrame of the fund's key financial metrics e.g. alpha, beta, Sharpe's Ratio** : obtained by calling `print(fund.fund_metrics_table())`
 
-<img src="/src/fund_metrics_table.png" alt="Fund Metrics Table">
+<img src="/src/fund-metrics.png" alt="Fund Metrics Table">
 
 Note that simply calling the attribute `fund.fund_metrics_table` returns you the DataFrame that can be integrated into other packages and use cases.
 
