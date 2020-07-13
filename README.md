@@ -78,7 +78,7 @@ Note that the variable `output_path` in `.export_graph` is set to 'data/fund-gra
 
 <img src="/src/fund-metrics.png" alt="Fund Metrics Table">
 
-Note that simply calling the attribute `fund.fund_metrics_table` returns you the DataFrame that can be integrated into other packages and use cases.
+Note that simply calling the method `fund.fund_metrics_table()` returns you the DataFrame that can be integrated into other packages and use cases.
 
 **3b. Exporting the DataFrame mentioned in 3a into a CSV** : obtained by calling `fund.export_fund_metrics(output_path)`
 
