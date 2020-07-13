@@ -5,7 +5,7 @@ Refer to Sample Code at the bottom for a template on how to use this package.
 
 ## 0. Initialising
 
-The following packages are required: `yahoofinancials`, `pandas`, `matplotlib`, `datetime`
+The following packages are required: `yahoofinancials`, `pandas`, `matplotlib`, `datetime`, `numpy`
 
 Enter the following imports at the top of the file:
 ```
@@ -17,13 +17,14 @@ from pyportfoliotracker import Fund
 
 Set up your fund using the following parameters:
 
-`fund = Fund(cash, index_ticker, date_of_creation, strategy):`
+`fund = Fund(cash, index_ticker, date_of_creation, strategy, risk_free_rate_percentage):`
 
 where
 - cash = cash value of the fund
 - index_ticker = the ticker (based on Yahoo Finance) of the benchmark index
 - date_of_creation = date of creation of the fund
 - strategy (optional) = strategy used for the index benchmark. The default strategy is lump_sum. The other option is dca10, which represents Dollar Cost Averaging using 10% of cash value per day.
+- risk_free_rate_percentage (optional) = the risk free rates, in percentage (e.g. enter 2.5 for 2.5%), that will be used to calculate alpha, beta and Sharpe ratio. The default is set to 2.5%.
 
 ## 2. Purchasing/Selling the relevant equities
 
@@ -53,36 +54,54 @@ where
 
 ## 3. Selecting your desired output
 
-There are 2 types of output that can be obtained:
+There are many types of output that can be useful to you:
 
-**1. Graphical comparison of fund vs index performance** : obtained by calling `fund.plot_fund_performance()`
+**1a. DataFrame of the fund's historical paper value vs Index** : obtained by calling `print(fund.all_assets_normalised)`
 
-<img src="/src/graphical_output.png" alt="Graphical Output of Fund Performance"/>
+Note that simply calling the attribute `fund.all_assets_normalised` returns you the DataFrame that can be integrated into other packages and use cases.
 
-**2. CSV file containing the value of the fund vs index over time** : obtained by calling `fund.export_to_csv(output_path)`
+**1b. Exporting the DataFrame mentioned in 1a into a CSV** : obtained by calling `fund.export_to_csv(output_path)`
 
 <img src="/src/csv_output.png" alt="CSV Output of Fund Performance"/>
 
 Note that the variable `output_path` in `.export_to_csv` is set to 'data/historical-paper-values.csv' by default.
 
-**2a. View the DataFrame directly**
+**2a. Graphical comparison of fund vs index performance** : obtained by calling `fund.plot_fund_performance()`
 
-The attribute `.all_assets_normalised` represents a DataFrame of the paper value of your fund vs the index.
-Use `print(fund.all_assets_normalised)` to view the DataFrame directly rather than exporting it as a CSV.
+<img src="/src/graphical_output.png" alt="Graphical Output of Fund Performance"/>
 
+**2b. Exporting the Graph mentioned in 2a into a PNG** : obtained by calling `fund.export_graph(output_path)`
+
+Note that the variable `output_path` in `.export_graph` is set to 'data/fund-graph-plot.png' by default.
+
+**3a. DataFrame of the fund's key financial metrics e.g. alpha, beta, Sharpe's Ratio** : obtained by calling `print(fund.fund_metrics_table())`
+
+<img src="/src/fund_metrics_table.png" alt="Fund Metrics Table">
+
+Note that simply calling the attribute `fund.fund_metrics_table` returns you the DataFrame that can be integrated into other packages and use cases.
+
+**3b. Exporting the DataFrame mentioned in 3a into a CSV** : obtained by calling `fund.export_fund_metrics(output_path)`
+
+Note that the variable `output_path` in `.export_graph` is set to 'data/fund-metrics.csv' by default.
 
 ## Sample Code:
 
 ```
-#Imports
+"""
+Imports
+"""
 import pyportfoliotracker
 from pyportfoliotracker import Fund
 
-#Set up your fund
+"""
+Set up your fund
+"""
 date = '2020-05-18'
-fund = Fund(2375706,'^FTSE',date,strategy='dca10')
+fund = Fund(2375706,'^FTSE',date,strategy='dca10', risk_free_rate_percentage=0.65)
 
-#Buy the relevant equities
+"""
+Buy the relevant equities
+"""
 fund.buy_equity('GSK.L',date,397,1670.20)
 fund.buy_equity('SGE.L',date,802,653)
 fund.buy_equity('NG.L',date,394,922.2)
@@ -92,13 +111,18 @@ fund.buy_equity('RHIM.L',date,69,2306.00)
 fund.buy_equity('ICP.L',date,64,1109.00)
 fund.buy_equity('ASC.L',date,21,2768.8)
 
-#Sell any equities
-fund.sell_equity('GSK.L','2020-05-21',300,1670.20)
+"""
+Sell the relevant equities
+"""
+fund.sell_equity('GSK.L','2020-05-22',397,1670.20)
 
-#Call methods based on output desired
-fund.plot_fund_performance()
-fund.export_to_csv()
-
-#To view data in Python command line rather than in a csv:
-print(fund.all_assets_normalised)
+"""
+Call methods based on output desired
+"""
+print(fund.all_assets_normalised.head()) #Returns a DataFrame of the historical performance of the fund
+fund.plot_fund_performance() #Returns a graphical plot of the fund vs index
+print(fund.fund_metrics_table()) #Returns a DataFrame of key fund metrics (alpha, beta, Sharpe's ratio)
+fund.export_to_csv() #Exports the DataFrame of historical performance into a CSV
+fund.export_graph() #Exports the graphical plot of the fund vs index into a PNG
+fund.export_fund_metrics() #Exports the DataFrame of key fund metrics into a CSV
 ```

@@ -2,3 +2,4 @@ yahoofinancials
 pandas
 matplotlib
 datetime
+numpy
