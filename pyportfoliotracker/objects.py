@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime, date
 import numpy as np
+#Random comment
 
 class Equity:
     def __init__(self, ticker, date_of_purchase, qty, risk_free_rate):
